@@ -124,7 +124,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    fade: ['fadeIn', 'fadeOut']
 	},
 	    customEffects = {},
-	    COOLDOWN = 1;
+	    COOLDOWN = 1,
+	    hasDropdownInstances = false;
 
 	function animate(effect, current, hide) {
 	    var self = this,
@@ -287,100 +288,108 @@ return /******/ (function(modules) { // webpackBootstrap
 	function init() {
 	    createDropdownsArray.call(this, this._rootDD);
 	    _eclipse2.default.storage.dropdowns.push(this);
+
+	    if (!hasDropdownInstances) {
+	        hasDropdownInstances = true;
+	        delegate();
+	    }
 	}
 	// Delegation
-	body.on('click', function (e) {
-	    var target = $(e.target),
-	        dropdownContainer = target.closest('[data-dropdown]'),
-	        dropdown,
-	        i,
-	        current,
-	        effectObj,
-	        pos,
-	        request,
-	        launch;
+	function delegate() {
+	    body.on('click', function (e) {
+	        var target = $(e.target),
+	            dropdownContainer = target.closest('[data-dropdown]'),
+	            dropdown,
+	            i,
+	            current,
+	            effectObj,
+	            pos,
+	            request,
+	            launch;
 
-	    if (!dropdownContainer.length) {
-	        return;
-	    }
-
-	    for (i = 0; i < _eclipse2.default.storage.dropdowns.length; i += 1) {
-	        if (_eclipse2.default.storage.dropdowns[i]._container[0] === dropdownContainer[0]) {
-	            dropdown = _eclipse2.default.storage.dropdowns[i];
-	            break;
-	        }
-	    }
-
-	    if (!dropdown) {
-	        return;
-	    }
-
-	    target = $(e.target).closest('.' + dropdown._defaults.trigger);
-
-	    if (!target.length) {
-	        return;
-	    }
-
-	    if (dropdown._defaults.shouldPreventDefault) {
-	        e.preventDefault();
-	    }
-
-	    if (dropdown._state) {
-	        return;
-	    }
-
-	    launch = function launch() {
-	        effectObj.isCustom ? customEffects[effectObj.effect].call(dropdown, current, false) : animate.call(dropdown, effectObj.effect, current, false);
-
-	        if (dropdown._defaults.hideSiblings) {
-	            hideSiblings.call(dropdown, current, current.level);
-	        }
-	        if (dropdown._defaults.hideNested && !current.dropdown.hasClass('dd-dropdown--pressed')) {
-	            hideNested.call(dropdown, current.id);
+	        if (!dropdownContainer.length) {
+	            return;
 	        }
 
-	        setTimeout(function () {
-	            dropdown._state = null;
-	        }, parseInt(dropdown._defaults.animationDuration, 10) || 0);
-	    };
-
-	    hideOnOtherDropdownsClick.call(dropdown, dropdown._container);
-
-	    dropdown._state = COOLDOWN;
-	    current = target.closest('.dd-dropdown');
-
-	    for (i = 0; i < dropdown._dropdowns.length; i++) {
-	        if (dropdown._dropdowns[i].dropdown[0] === current[0]) {
-	            current = dropdown._dropdowns[i];
-	            break;
-	        }
-	    }
-
-	    effectObj = getEffect.call(dropdown);
-
-	    if (typeof dropdown._defaults.wait === 'function') {
-	        request = dropdown._defaults.wait(current);
-
-	        if (request.then) {
-	            pos = _eclipse2.default.storage.dropdowns.indexOf(dropdown);
-
-	            if (pos !== -1) {
-	                _eclipse2.default.storage.dropdowns.splice(pos, 1);
+	        for (i = 0; i < _eclipse2.default.storage.dropdowns.length; i += 1) {
+	            if (_eclipse2.default.storage.dropdowns[i]._container[0] === dropdownContainer[0]) {
+	                dropdown = _eclipse2.default.storage.dropdowns[i];
+	                break;
 	            }
-	            dropdown._dropdowns.length = 0;
+	        }
 
-	            $.when(request).then(function (a, b) {
-	                createDropdownsArray.call(dropdown, dropdown._rootDD);
-	                _eclipse2.default.storage.dropdowns.push(dropdown);
+	        if (!dropdown) {
+	            return;
+	        }
+
+	        target = $(e.target).closest('.' + dropdown._defaults.trigger);
+
+	        if (!target.length) {
+	            return;
+	        }
+
+	        if (dropdown._defaults.shouldPreventDefault) {
+	            e.preventDefault();
+	        }
+
+	        if (dropdown._state) {
+	            return;
+	        }
+
+	        launch = function launch() {
+	            effectObj.isCustom ? customEffects[effectObj.effect].call(dropdown, current, false) : animate.call(dropdown, effectObj.effect, current, false);
+
+	            if (dropdown._defaults.hideSiblings) {
+	                hideSiblings.call(dropdown, current, current.level);
+	            }
+	            if (dropdown._defaults.hideNested && !current.dropdown.hasClass('dd-dropdown--pressed')) {
+	                hideNested.call(dropdown, current.id);
+	            }
+
+	            setTimeout(function () {
+	                dropdown._state = null;
+	            }, parseInt(dropdown._defaults.animationDuration, 10) || 0);
+	        };
+
+	        hideOnOtherDropdownsClick.call(dropdown, dropdown._container);
+
+	        dropdown._state = COOLDOWN;
+	        current = target.closest('.dd-dropdown');
+
+	        for (i = 0; i < dropdown._dropdowns.length; i++) {
+	            if (dropdown._dropdowns[i].dropdown[0] === current[0]) {
+	                current = dropdown._dropdowns[i];
+	                break;
+	            }
+	        }
+
+	        effectObj = getEffect.call(dropdown);
+
+	        if (typeof dropdown._defaults.wait === 'function') {
+	            request = dropdown._defaults.wait(current);
+
+	            if (request.then) {
+	                pos = _eclipse2.default.storage.dropdowns.indexOf(dropdown);
+
+	                if (pos !== -1) {
+	                    _eclipse2.default.storage.dropdowns.splice(pos, 1);
+	                }
+	                dropdown._dropdowns.length = 0;
+
+	                $.when(request).then(function (a, b) {
+	                    createDropdownsArray.call(dropdown, dropdown._rootDD);
+	                    _eclipse2.default.storage.dropdowns.push(dropdown);
+	                    launch();
+	                });
+	            } else {
 	                launch();
-	            });
+	            }
 	        } else {
 	            launch();
 	        }
-	    } else {
-	        launch();
-	    }
-	});
+	    });
+	}
+
 	// Delegation (END)
 
 	function Dropdown(root, options) {
@@ -550,7 +559,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var body = $('body'),
-	    currentSpinner;
+	    currentSpinner,
+	    hasSpinnerInstances;
 
 	function update(action) {
 	    var self = this;
@@ -630,6 +640,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function init() {
 	    _eclipse2.default.storage.spinners.push(this);
+
+	    if (!hasSpinnerInstances) {
+	        hasSpinnerInstances = true;
+	        delegate();
+	    }
 	}
 
 	// Delegation
@@ -652,115 +667,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return spinner;
 	}
-	body.on('click', function (e) {
-	    var spinner, target, control;
 
-	    target = $(e.target);
-	    control = target.closest('.sp-control');
-
-	    if (!control.length) {
-	        return;
-	    }
-
-	    spinner = findSpinner(e);
-
-	    if (!spinner) {
-	        return;
-	    }
-
-	    if (spinner._defaults.shouldPreventDefault) {
-	        e.preventDefault();
-	    }
-
-	    if (control.hasClass('sp-control--plus')) {
-	        inc.call(spinner);
-	    } else if (control.hasClass('sp-control--minus')) {
-	        dec.call(spinner);
-	    }
-	});
-	body.on('change blur', function (e) {
-	    var spinner, target, field, val, min, max;
-
-	    target = $(e.target);
-	    field = target.closest('.sp-field');
-
-	    if (!field.length) {
-	        return;
-	    }
-
-	    spinner = findSpinner(e);
-
-	    if (!spinner) {
-	        return;
-	    }
-
-	    val = field.val();
-	    min = parseFloat(spinner._defaults.min);
-	    max = parseFloat(spinner._defaults.max);
-
-	    if (parseFloat(val) > max && !isNaN(max)) {
-	        field.val(max);
-	    } else if (parseFloat(val) < min && !isNaN(min)) {
-	        field.val(min);
-	    } else if (!_eclipse2.default.helpers.isNumeric(val)) {
-	        field.val(spinner._defaults.initial);
-	    }
-	    field.val(parseFloat(field.val()).toFixed(parseInt(spinner._defaults.precision, 10) || 0));
-	});
-	body.on('keydown', function (e) {
-	    var spinner, target, field;
-
-	    target = $(e.target);
-	    field = target.closest('.sp-field');
-
-	    if (!field.length) {
-	        return;
-	    }
-
-	    spinner = findSpinner(e);
-
-	    if (!spinner) {
-	        return;
-	    }
-	    spinner.previousValue = field.val();
-	});
-	body.on('input', function (e) {
-	    var spinner, target, field, min, max;
-
-	    target = $(e.target);
-	    field = target.closest('.sp-field');
-
-	    if (!field.length) {
-	        return;
-	    }
-
-	    spinner = findSpinner(e);
-
-	    if (!spinner) {
-	        return;
-	    }
-
-	    min = parseFloat(spinner._defaults.min), max = parseFloat(spinner._defaults.max);
-
-	    if (!_eclipse2.default.helpers.isNumeric(field.val()) && field.val() !== '') {
-	        if (field.val() === '-' && (min < 0 || max < 0)) {
-	            return;
-	        }
-	        field.val(spinner.previousValue);
-	    }
-	});
-	body.on('touchstart mousedown', function (e) {
-	    var isTouch = false;
-
-	    return function (e) {
+	function delegate() {
+	    body.on('click', function (e) {
 	        var spinner, target, control;
-
-	        if (e.type === 'touchstart') {
-	            isTouch = true;
-	        }
-	        if (e.type === 'mousedown' && isTouch) {
-	            return;
-	        }
 
 	        target = $(e.target);
 	        control = target.closest('.sp-control');
@@ -771,86 +681,194 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        spinner = findSpinner(e);
 
-	        if (!spinner || !spinner._defaults.launchOnClamp) {
+	        if (!spinner) {
 	            return;
 	        }
 
-	        currentSpinner = spinner;
+	        if (spinner._defaults.shouldPreventDefault) {
+	            e.preventDefault();
+	        }
 
 	        if (control.hasClass('sp-control--plus')) {
-	            update.call(spinner, 'inc');
+	            inc.call(spinner);
 	        } else if (control.hasClass('sp-control--minus')) {
-	            update.call(spinner, 'dec');
+	            dec.call(spinner);
 	        }
-	    };
-	}());
-	body.on('touchend mouseup', function () {
-	    var isTouch = false;
+	    });
+	    body.on('change blur', function (e) {
+	        var spinner, target, field, val, min, max;
 
-	    return function (e) {
-	        var spinner;
+	        target = $(e.target);
+	        field = target.closest('.sp-field');
 
-	        if (e.type === 'touchend') {
-	            isTouch = true;
-	        }
-	        if (e.type === 'mouseup' && isTouch) {
+	        if (!field.length) {
 	            return;
 	        }
 
 	        spinner = findSpinner(e);
 
-	        if (!spinner || !spinner._defaults.launchOnClamp) {
+	        if (!spinner) {
 	            return;
 	        }
 
-	        currentSpinner = null;
-	        clearTimeout(spinner._timerID);
-	        clearInterval(spinner._intervalID);
-	    };
-	}());
-	body.on('touchmove mouseout', function () {
-	    var isTouch = false;
+	        val = field.val();
+	        min = parseFloat(spinner._defaults.min);
+	        max = parseFloat(spinner._defaults.max);
 
-	    return function (e) {
-	        var spinner, touch, target, x, y, elUnderFinger;
-
-	        if (e.type === 'touchmove') {
-	            isTouch = true;
+	        if (parseFloat(val) > max && !isNaN(max)) {
+	            field.val(max);
+	        } else if (parseFloat(val) < min && !isNaN(min)) {
+	            field.val(min);
+	        } else if (!_eclipse2.default.helpers.isNumeric(val)) {
+	            field.val(spinner._defaults.initial);
 	        }
-	        if (e.type === 'mouseout' && isTouch) {
+	        field.val(parseFloat(field.val()).toFixed(parseInt(spinner._defaults.precision, 10) || 0));
+	    });
+	    body.on('keydown', function (e) {
+	        var spinner, target, field;
+
+	        target = $(e.target);
+	        field = target.closest('.sp-field');
+
+	        if (!field.length) {
 	            return;
 	        }
 
-	        if (!currentSpinner || !currentSpinner._defaults.launchOnClamp) {
+	        spinner = findSpinner(e);
+
+	        if (!spinner) {
+	            return;
+	        }
+	        spinner.previousValue = field.val();
+	    });
+	    body.on('input', function (e) {
+	        var spinner, target, field, min, max;
+
+	        target = $(e.target);
+	        field = target.closest('.sp-field');
+
+	        if (!field.length) {
 	            return;
 	        }
 
-	        if (e.type === 'touchmove') {
-	            touch = e.touches[0];
-	            x = touch.clientX;
-	            y = touch.clientY;
-	            elUnderFinger = $(document.elementFromPoint(x, y));
+	        spinner = findSpinner(e);
 
-	            if (elUnderFinger.closest('[data-spinner]')[0] === currentSpinner._container[0]) {
+	        if (!spinner) {
+	            return;
+	        }
+
+	        min = parseFloat(spinner._defaults.min), max = parseFloat(spinner._defaults.max);
+
+	        if (!_eclipse2.default.helpers.isNumeric(field.val()) && field.val() !== '') {
+	            if (field.val() === '-' && (min < 0 || max < 0)) {
+	                return;
+	            }
+	            field.val(spinner.previousValue);
+	        }
+	    });
+	    body.on('touchstart mousedown', function (e) {
+	        var isTouch = false;
+
+	        return function (e) {
+	            var spinner, target, control;
+
+	            if (e.type === 'touchstart') {
+	                isTouch = true;
+	            }
+	            if (e.type === 'mousedown' && isTouch) {
 	                return;
 	            }
 
-	            clearTimeout(currentSpinner._timerID);
-	            clearInterval(currentSpinner._intervalID);
-	            currentSpinner = null;
-	        } else {
-	            target = $(e.relatedTarget).closest('[data-spinner]');
+	            target = $(e.target);
+	            control = target.closest('.sp-control');
 
-	            if (target[0] === currentSpinner._container[0]) {
+	            if (!control.length) {
 	                return;
 	            }
 
-	            clearTimeout(currentSpinner._timerID);
-	            clearInterval(currentSpinner._intervalID);
+	            spinner = findSpinner(e);
+
+	            if (!spinner || !spinner._defaults.launchOnClamp) {
+	                return;
+	            }
+
+	            currentSpinner = spinner;
+
+	            if (control.hasClass('sp-control--plus')) {
+	                update.call(spinner, 'inc');
+	            } else if (control.hasClass('sp-control--minus')) {
+	                update.call(spinner, 'dec');
+	            }
+	        };
+	    }());
+	    body.on('touchend mouseup', function () {
+	        var isTouch = false;
+
+	        return function (e) {
+	            var spinner;
+
+	            if (e.type === 'touchend') {
+	                isTouch = true;
+	            }
+	            if (e.type === 'mouseup' && isTouch) {
+	                return;
+	            }
+
+	            spinner = findSpinner(e);
+
+	            if (!spinner || !spinner._defaults.launchOnClamp) {
+	                return;
+	            }
+
 	            currentSpinner = null;
-	        }
-	    };
-	}());
+	            clearTimeout(spinner._timerID);
+	            clearInterval(spinner._intervalID);
+	        };
+	    }());
+	    body.on('touchmove mouseout', function () {
+	        var isTouch = false;
+
+	        return function (e) {
+	            var spinner, touch, target, x, y, elUnderFinger;
+
+	            if (e.type === 'touchmove') {
+	                isTouch = true;
+	            }
+	            if (e.type === 'mouseout' && isTouch) {
+	                return;
+	            }
+
+	            if (!currentSpinner || !currentSpinner._defaults.launchOnClamp) {
+	                return;
+	            }
+
+	            if (e.type === 'touchmove') {
+	                touch = e.touches[0];
+	                x = touch.clientX;
+	                y = touch.clientY;
+	                elUnderFinger = $(document.elementFromPoint(x, y));
+
+	                if (elUnderFinger.closest('[data-spinner]')[0] === currentSpinner._container[0]) {
+	                    return;
+	                }
+
+	                clearTimeout(currentSpinner._timerID);
+	                clearInterval(currentSpinner._intervalID);
+	                currentSpinner = null;
+	            } else {
+	                target = $(e.relatedTarget).closest('[data-spinner]');
+
+	                if (target[0] === currentSpinner._container[0]) {
+	                    return;
+	                }
+
+	                clearTimeout(currentSpinner._timerID);
+	                clearInterval(currentSpinner._intervalID);
+	                currentSpinner = null;
+	            }
+	        };
+	    }());
+	}
 	// Delegation (END)
 
 	function Spinner(root, options) {
@@ -982,7 +1000,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    fade: 'fadeToggle'
 	},
 	    staticTabs,
-	    adaptiveTabs;
+	    adaptiveTabs,
+	    hasStaticTabsInstances = false,
+	    hasAdaptiveTabsInstances = false;
 
 	function findTabs(e, tabsType) {
 	    var target = $(e.target),
@@ -1057,30 +1077,37 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function init() {
 	        _eclipse2.default.storage.staticTabs.push(this);
+
+	        if (!hasStaticTabsInstances) {
+	            hasStaticTabsInstances = true;
+	            delegate();
+	        }
 	    }
 	    // Delegation
-	    body.on('click', function (e) {
-	        var tabs, target, tabNavItem;
+	    function delegate() {
+	        body.on('click', function (e) {
+	            var tabs, target, tabNavItem;
 
-	        target = $(e.target);
-	        tabNavItem = target.closest('.t-tab-nav-item');
+	            target = $(e.target);
+	            tabNavItem = target.closest('.t-tab-nav-item');
 
-	        if (!tabNavItem.length) {
-	            return;
-	        }
+	            if (!tabNavItem.length) {
+	                return;
+	            }
 
-	        tabs = findTabs(e, 'staticTabs');
+	            tabs = findTabs(e, 'staticTabs');
 
-	        if (!tabs) {
-	            return;
-	        }
+	            if (!tabs) {
+	                return;
+	            }
 
-	        if (tabs._defaults.shouldPreventDefault) {
-	            e.preventDefault();
-	        }
+	            if (tabs._defaults.shouldPreventDefault) {
+	                e.preventDefault();
+	            }
 
-	        switchTab.call(tabNavItem, tabs);
-	    });
+	            switchTab.call(tabNavItem, tabs);
+	        });
+	    }
 	    // Delegation (END)
 
 	    function StaticTabs(container, options) {
@@ -1270,35 +1297,42 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function init() {
 	        _eclipse2.default.storage.adaptiveTabs.push(this);
+
+	        if (!hasAdaptiveTabsInstances) {
+	            hasAdaptiveTabsInstances = true;
+	            delegate();
+	        }
 	    }
 
 	    // Delegation
-	    body.on('click', function (e) {
-	        var tabs, target, tabNavItem;
+	    function delegate() {
+	        body.on('click', function (e) {
+	            var tabs, target, tabNavItem;
 
-	        target = $(e.target);
-	        tabNavItem = target.closest('.t-tab-nav-item');
+	            target = $(e.target);
+	            tabNavItem = target.closest('.t-tab-nav-item');
 
-	        if (!tabNavItem.length) {
-	            return;
-	        }
+	            if (!tabNavItem.length) {
+	                return;
+	            }
 
-	        tabs = findTabs(e, 'adaptiveTabs');
+	            tabs = findTabs(e, 'adaptiveTabs');
 
-	        if (!tabs) {
-	            return;
-	        }
+	            if (!tabs) {
+	                return;
+	            }
 
-	        if (tabs._defaults.shouldPreventDefault) {
-	            e.preventDefault();
-	        }
+	            if (tabs._defaults.shouldPreventDefault) {
+	                e.preventDefault();
+	            }
 
-	        if (tabNavItem.hasClass('t-tab-nav-item--desktop')) {
-	            switchTabDesktop.call(tabNavItem, tabs);
-	        } else if (tabNavItem.hasClass('t-tab-nav-item--mobile')) {
-	            switchTabMobile.call(tabNavItem, tabs);
-	        }
-	    });
+	            if (tabNavItem.hasClass('t-tab-nav-item--desktop')) {
+	                switchTabDesktop.call(tabNavItem, tabs);
+	            } else if (tabNavItem.hasClass('t-tab-nav-item--mobile')) {
+	                switchTabMobile.call(tabNavItem, tabs);
+	            }
+	        });
+	    }
 	    // Delegation (END)
 
 	    function AdaptiveTabs(container, options) {
@@ -1419,7 +1453,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    triggerCls = 'bundle-trigger--active',
 	    containerCls = 'bundle-container--active',
 	    overlayCls = 'bundle-overlay--visible',
-	    bodyCls = 'body--hidden';
+	    hasBundleInstances = false,
+	    styleEl,
+	    scrollbarStyle = '';
 
 	function findBundle(e) {
 	    var target = $(e.target),
@@ -1446,6 +1482,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._container[action + 'Class'](containerCls);
 
 	    if (this._trigger.data('body')) {
+	        if (styleEl) {
+	            document.body.removeChild(styleEl);
+	        }
+	        if (_eclipse2.default.DOM.isBodyScrollable() > 0) {
+	            styleEl = document.createElement('style');
+	            scrollbarStyle = 'html.html--hidden > body{margin-right: 17px;}';
+	            styleEl.innerHTML = scrollbarStyle;
+	            document.body.appendChild(styleEl);
+	        }
+
 	        $('html')[action + 'Class']('html--hidden');
 	    }
 	    if (this._trigger.data('overlay')) {
@@ -1480,31 +1526,38 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function init() {
 	    _eclipse2.default.storage.bundles.push(this);
+
+	    if (!hasBundleInstances) {
+	        hasBundleInstances = true;
+	        delegate();
+	    }
 	}
 
 	// Delegation
-	body.on('click', function (e) {
-	    var bundle = findBundle(e),
-	        target,
-	        action;
+	function delegate() {
+	    body.on('click', function (e) {
+	        var bundle = findBundle(e),
+	            target,
+	            action;
 
-	    if (!bundle) {
-	        return;
-	    }
+	        if (!bundle) {
+	            return;
+	        }
 
-	    target = $(e.target).closest('[data-bundle]');
-	    action = target.data('bundle-action');
+	        target = $(e.target).closest('[data-bundle]');
+	        action = target.data('bundle-action');
 
-	    if (!action) {
-	        return;
-	    }
+	        if (!action) {
+	            return;
+	        }
 
-	    if (bundle._defaults.shouldPreventDefault) {
-	        e.preventDefault();
-	    }
+	        if (bundle._defaults.shouldPreventDefault) {
+	            e.preventDefault();
+	        }
 
-	    switchBundle.call(bundle, bundle._defaults, action === 'toggle' ? 'toggle' : 'remove');
-	});
+	        switchBundle.call(bundle, bundle._defaults, action === 'toggle' ? 'toggle' : 'remove');
+	    });
+	}
 	// Delegation (END)
 
 	function Bundle(trigger, close, options) {
@@ -1620,7 +1673,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var body = $('body');
+	var body = $('body'),
+	    hasSearchInstances = false;
 
 	function findSearch(e) {
 	    var target = $(e.target),
@@ -1658,36 +1712,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function init() {
 	    _eclipse2.default.storage.searches.push(this);
+
+	    if (!hasSearchInstances) {
+	        hasSearchInstances = true;
+	        delegate();
+	    }
 	}
 
 	// Delegation
-	body.on('input', function (e) {
-	    var search = findSearch(e),
-	        reg;
+	function delegate() {
+	    body.on('input', function (e) {
+	        var search = findSearch(e),
+	            reg;
 
-	    if (!search) {
-	        return;
-	    }
+	        if (!search) {
+	            return;
+	        }
 
-	    reg = new RegExp('(' + search._field.val() + ')', 'gi');
+	        reg = new RegExp('(' + search._field.val() + ')', 'gi');
 
-	    search._boxes.each(function () {
-	        var that = $(this);
+	        search._boxes.each(function () {
+	            var that = $(this);
 
-	        that.html(that.html().replace(/<\/?\w[1-6]?\w*\s*.*?>/g, ''));
+	            that.html(that.html().replace(/<\/?\w[1-6]?\w*\s*.*?>/g, ''));
 
-	        if (that.text().search(reg) !== -1) {
-	            that.html(that.html().replace(reg, '<span class="s-match">$1</span>'));
-	            that.addClass('s-match--visible').removeClass('s-match--invisible');
-	        } else {
-	            that.addClass('s-match--invisible').removeClass('s-match--visible');
+	            if (that.text().search(reg) !== -1) {
+	                that.html(that.html().replace(reg, '<span class="s-match">$1</span>'));
+	                that.addClass('s-match--visible').removeClass('s-match--invisible');
+	            } else {
+	                that.addClass('s-match--invisible').removeClass('s-match--visible');
+	            }
+	        });
+
+	        if (search._defaults.invokeCallback) {
+	            search._defaults.callback();
 	        }
 	    });
-
-	    if (search._defaults.invokeCallback) {
-	        search._defaults.callback();
-	    }
-	});
+	}
 	// Delegation (END)
 
 	function Search(container, options) {
