@@ -202,10 +202,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	}
 
-	function getEffect() {
+	function getEffect(dropdown) {
 	    var effect, isCustom;
 
-	    if (effects[this._defaults.effect] || customEffects[this._defaults.effect]) {
+	    if (this._defaults.effect === null && dropdown.data('effect') && (effects[dropdown.data('effect')] || customEffects[dropdown.data('effect')])) {
+	        effect = dropdown.data('effect');
+	    } else if (effects[this._defaults.effect] || customEffects[this._defaults.effect]) {
 	        effect = this._defaults.effect;
 	    } else {
 	        effect = 'toggle';
@@ -226,7 +228,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    self._dropdowns.forEach(function (item) {
 	        if (item.parentID === id) {
-	            effectObj = getEffect.call(self);
+	            effectObj = getEffect.call(self, item.dropdown);
 	            effectObj.isCustom ? customEffects[effectObj.effect].call(self, item, true) : animate.call(self, effectObj.effect, item, true);
 
 	            next.push(item);
@@ -246,7 +248,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    self._dropdowns.forEach(function (item) {
 	        if (item !== current && item.level === level && item.dropdown.hasClass('dd-dropdown--opened')) {
-	            effectObj = getEffect.call(self);
+	            effectObj = getEffect.call(self, item.dropdown);
 	            effectObj.isCustom ? customEffects[effectObj.effect].call(self, item, true) : animate.call(self, effectObj.effect, item, true);
 
 	            if (self._defaults.hideNested) {
@@ -363,12 +365,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 
-	        effectObj = getEffect.call(dropdown);
+	        effectObj = getEffect.call(dropdown, current.dropdown);
 
 	        if (typeof dropdown._defaults.wait === 'function') {
 	            request = dropdown._defaults.wait(current);
 
-	            if (request.then) {
+	            if (_eclipse2.default.helpers.getClass(request) === 'Object' && request.then) {
 	                pos = _eclipse2.default.storage.dropdowns.indexOf(dropdown);
 
 	                if (pos !== -1) {
