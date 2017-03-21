@@ -3,8 +3,13 @@ var webpack = require('webpack');
 module.exports = {
     entry: './eclipse-ui.js',
     externals: {
-        jquery: 'jQuery',
-        eclipse: 'eclipse'
+        eclipse: {
+            commonjs: 'eclipse',
+            commonjs2: 'eclipse',
+            amd: 'eclipse',
+            umd: 'eclipse',
+            root: 'eclipse'
+        }
     },
     output: {
         path: __dirname,
