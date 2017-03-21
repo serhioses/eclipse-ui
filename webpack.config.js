@@ -9,6 +9,13 @@ module.exports = {
             amd: 'eclipse',
             umd: 'eclipse',
             root: 'eclipse'
+        },
+        jquery: {
+            commonjs: 'jquery',
+            commonjs2: 'jquery',
+            amd: 'jquery',
+            umd: 'jquery',
+            root: 'jQuery'
         }
     },
     output: {
