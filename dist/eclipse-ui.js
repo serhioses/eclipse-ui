@@ -1477,9 +1477,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    triggerCls = 'bundle-trigger--active',
 	    containerCls = 'bundle-container--active',
 	    overlayCls = 'bundle-overlay--visible',
-	    hasBundleInstances = false,
-	    styleEl,
-	    scrollbarStyle = '';
+	    hasBundleInstances = false;
 
 	function findBundle(e) {
 	    var target = (0, _jquery2.default)(e.target),
@@ -1506,17 +1504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._container[action + 'Class'](containerCls);
 
 	    if (this._trigger.data('body')) {
-	        if (styleEl) {
-	            document.body.removeChild(styleEl);
-	        }
-	        if (_eclipse2.default.DOM.isBodyScrollable() > 0) {
-	            styleEl = document.createElement('style');
-	            scrollbarStyle = 'html.html--hidden > body{margin-right: 17px;}';
-	            styleEl.innerHTML = scrollbarStyle;
-	            document.body.appendChild(styleEl);
-	        }
-
-	        (0, _jquery2.default)('html')[action + 'Class']('html--hidden');
+	        body[action + 'Class']('body--hidden');
 	    }
 	    if (this._trigger.data('overlay')) {
 	        this._overlay[action + 'Class'](overlayCls);
