@@ -131,42 +131,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	    COOLDOWN = 1,
 	    hasDropdownInstances = false;
 
-	function animate(effect, current, hide) {
+	function animate(effect, currentItem, hide) {
 	    var self = this,
-	        hasClass = current.dropdown.hasClass('dd-dropdown--opened');
+	        hasClass = currentItem.dropdown.hasClass('dd-dropdown--opened');
 
 	    if (hasClass || hide) {
 	        if (hasClass) {
-	            self._defaults.beforeClose(self._container);
+	            self._defaults.beforeClose(self, currentItem);
 	        }
 
-	        current.dropdown.removeClass('dd-dropdown--pressed');
-	        current.trigger.removeClass('dd-trigger--active');
+	        currentItem.dropdown.removeClass('dd-dropdown--pressed');
+	        currentItem.trigger.removeClass('dd-trigger--active');
 
-	        current.drop[effects[effect][1]]({
+	        currentItem.drop[effects[effect][1]]({
 	            duration: parseInt(self._defaults.animationDuration, 10) || 0,
 	            done: function done() {
-	                var hasClass = current.dropdown.hasClass('dd-dropdown--opened');
+	                var hasClass = currentItem.dropdown.hasClass('dd-dropdown--opened');
 
-	                current.dropdown.removeClass('dd-dropdown--opened');
-	                current.drop.css(resetCSS);
+	                currentItem.dropdown.removeClass('dd-dropdown--opened');
+	                currentItem.drop.css(resetCSS);
 
 	                if (hasClass) {
-	                    self._defaults.afterClose(self._container);
+	                    self._defaults.afterClose(self, currentItem);
 	                }
 	            }
 	        });
 	    } else {
-	        self._defaults.beforeOpen(self._container);
-	        current.dropdown.addClass('dd-dropdown--pressed');
-	        current.trigger.addClass('dd-trigger--active');
+	        self._defaults.beforeOpen(self, currentItem);
+	        currentItem.dropdown.addClass('dd-dropdown--pressed');
+	        currentItem.trigger.addClass('dd-trigger--active');
 
-	        current.drop[effects[effect][0]]({
+	        currentItem.drop[effects[effect][0]]({
 	            duration: parseInt(self._defaults.animationDuration, 10) || 0,
 	            done: function done() {
-	                current.dropdown.addClass('dd-dropdown--opened');
-	                current.drop.css(resetCSS);
-	                self._defaults.afterOpen(self._container);
+	                currentItem.dropdown.addClass('dd-dropdown--opened');
+	                currentItem.drop.css(resetCSS);
+	                self._defaults.afterOpen(self, currentItem);
 	            }
 	        });
 	    }
@@ -246,12 +246,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
-	function hideSiblings(current, level) {
+	function hideSiblings(currentItem, level) {
 	    var self = this,
 	        effectObj;
 
 	    self._dropdowns.forEach(function (item) {
-	        if (item !== current && item.level === level && item.dropdown.hasClass('dd-dropdown--opened')) {
+	        if (item !== currentItem && item.level === level && item.dropdown.hasClass('dd-dropdown--opened')) {
 	            effectObj = getEffect.call(self, item.dropdown);
 	            effectObj.isCustom ? customEffects[effectObj.effect].call(self, item, true) : animate.call(self, effectObj.effect, item, true);
 
@@ -307,7 +307,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            dropdownContainer = target.closest('[data-dropdown]'),
 	            dropdown,
 	            i,
-	            current,
+	            currentItem,
 	            effectObj,
 	            pos,
 	            request,
@@ -343,13 +343,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        launch = function launch() {
-	            effectObj.isCustom ? customEffects[effectObj.effect].call(dropdown, current, false) : animate.call(dropdown, effectObj.effect, current, false);
+	            effectObj.isCustom ? customEffects[effectObj.effect].call(dropdown, currentItem, false) : animate.call(dropdown, effectObj.effect, currentItem, false);
 
 	            if (dropdown._defaults.hideSiblings) {
-	                hideSiblings.call(dropdown, current, current.level);
+	                hideSiblings.call(dropdown, currentItem, currentItem.level);
 	            }
-	            if (dropdown._defaults.hideNested && !current.dropdown.hasClass('dd-dropdown--pressed')) {
-	                hideNested.call(dropdown, current.id);
+	            if (dropdown._defaults.hideNested && !currentItem.dropdown.hasClass('dd-dropdown--pressed')) {
+	                hideNested.call(dropdown, currentItem.id);
 	            }
 
 	            setTimeout(function () {
@@ -360,19 +360,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        hideOnOtherDropdownsClick.call(dropdown, dropdown._container);
 
 	        dropdown._state = COOLDOWN;
-	        current = target.closest('.dd-dropdown');
+	        currentItem = target.closest('.dd-dropdown');
 
 	        for (i = 0; i < dropdown._dropdowns.length; i++) {
-	            if (dropdown._dropdowns[i].dropdown[0] === current[0]) {
-	                current = dropdown._dropdowns[i];
+	            if (dropdown._dropdowns[i].dropdown[0] === currentItem[0]) {
+	                currentItem = dropdown._dropdowns[i];
 	                break;
 	            }
 	        }
 
-	        effectObj = getEffect.call(dropdown, current.dropdown);
+	        effectObj = getEffect.call(dropdown, currentItem.dropdown);
 
 	        if (typeof dropdown._defaults.wait === 'function') {
-	            request = dropdown._defaults.wait(current);
+	            request = dropdown._defaults.wait(currentItem);
 
 	            if (_eclipse2.default.helpers.getClass(request) === 'Object' && request.then) {
 	                pos = _eclipse2.default.storage.dropdowns.indexOf(dropdown);
@@ -540,8 +540,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    enumerable: false
 	});
 	Object.defineProperty(Dropdown.prototype, 'close', {
-	    value: function value(effect, current, hide) {
-	        animate.call(this, effect, current, hide);
+	    value: function value(effect, currentItem, hide) {
+	        animate.call(this, effect, currentItem, hide);
 	    },
 	    enumerable: false
 	});
@@ -611,11 +611,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            amount += step;
 	        }
 
-	        this._field.val(amount.toFixed(precision));
+	        this._field.val(amount.toFixed(precision) + (this._field.data('addition') || ''));
 	    } else if (isNaN(max)) {
 	        amount += step;
 
-	        this._field.val(amount.toFixed(precision));
+	        this._field.val(amount.toFixed(precision) + (this._field.data('addition') || ''));
 	    }
 	}
 
@@ -632,11 +632,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            amount -= step;
 	        }
 
-	        this._field.val(amount.toFixed(precision));
+	        this._field.val(amount.toFixed(precision) + (this._field.data('addition') || ''));
 	    } else if (isNaN(min)) {
 	        amount -= step;
 
-	        this._field.val(amount.toFixed(precision));
+	        this._field.val(amount.toFixed(precision) + (this._field.data('addition') || ''));
 	    }
 	}
 
@@ -736,9 +736,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else if (parseFloat(val) < min && !isNaN(min)) {
 	            field.val(min);
 	        } else if (!_eclipse2.default.helpers.isNumeric(val)) {
-	            field.val(spinner._defaults.initial);
+	            field.val(spinner._defaults.initial + (field.data('addition') || ''));
 	        }
-	        field.val(parseFloat(field.val()).toFixed(parseInt(spinner._defaults.precision, 10) || 0));
+
+	        field.val(parseFloat(field.val()).toFixed(parseInt(spinner._defaults.precision, 10) || 0) + (field.data('addition') || ''));
 	    });
 	    body.on('keydown', function (e) {
 	        var spinner, target, field;
@@ -758,7 +759,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        spinner.previousValue = field.val();
 	    });
 	    body.on('input', function (e) {
-	        var spinner, target, field, min, max;
+	        var spinner, target, field, min, max, val;
 
 	        target = (0, _jquery2.default)(e.target);
 	        field = target.closest('.sp-field');
@@ -774,9 +775,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        min = parseFloat(spinner._defaults.min), max = parseFloat(spinner._defaults.max);
+	        val = field.val().replace(new RegExp(field.data('addition'), 'g'), '');
 
-	        if (!_eclipse2.default.helpers.isNumeric(field.val()) && field.val() !== '') {
-	            if (field.val() === '-' && (min < 0 || max < 0)) {
+	        if (!_eclipse2.default.helpers.isNumeric(val) && val !== '') {
+	            if (val === '-' && (min < 0 || max < 0)) {
 	                return;
 	            }
 	            field.val(spinner.previousValue);
@@ -1513,10 +1515,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    options.callback(this._trigger, this._close, this._container);
 	}
 
-	function hideOnOtherBundleClick(trigger, close, container, overlay) {
+	function hideOnOtherBundleClick( /*trigger, close, container, overlay*/id) {
 	    _eclipse2.default.storage.bundles.forEach(function (item) {
 	        var options = item._defaults;
-	        if ((item._trigger !== trigger || item._close !== close || item._container !== container || item._overlay !== overlay) && item._trigger.hasClass(triggerCls)) {
+	        // if ((item._trigger !== trigger || item._close !== close || item._container !== container || item._overlay !== overlay) && item._trigger.hasClass(triggerCls)) {
+	        //     switchBundle.call(item, options, 'remove');
+	        // }
+	        if (item._id !== id && item._trigger.hasClass(triggerCls) && item._trigger.data('other-bundles')) {
 	            switchBundle.call(item, options, 'remove');
 	        }
 	    });
@@ -1567,6 +1572,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            e.preventDefault();
 	        }
 
+	        hideOnOtherBundleClick(bundle._id);
 	        switchBundle.call(bundle, bundle._defaults, action === 'toggle' ? 'toggle' : 'remove');
 	    });
 	}
@@ -1584,7 +1590,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    defaults.callback = _jquery2.default.noop;
 
 	    if (_eclipse2.default.helpers.getClass(options) === 'Object') {
-	        _jquery2.default.extend(this._defaults, options);
+	        _jquery2.default.extend(defaults, options);
 	    }
 
 	    Object.defineProperty(this, '_defaults', {
